@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Messenger.js specs</title>
+		<link rel="stylesheet" type="text/css" href="../node_modules/mocha/mocha.css">
+	</head>
+	<body>
+		<div id="mocha"></div>
+
+		<script src="../node_modules/mocha/mocha.js"></script>
+		<script src="../node_modules/requirejs/require.js"></script>
+		<!-- blanket script references, this need to be placed after mocha and require -->
+		<script src="../node_modules/blanket/dist/qunit/blanket.js" data-cover-only="source/messenger"></script>
+		<script src="../node_modules/blanket/src/adapters/mocha-blanket.js"></script>
+		<script>
+			mocha.setup("bdd");
+			require(["../source/config"], function (config) {
+				require(["spec/messenger.spec"], function (MessengerSpec) {
+					mocha.run();
+				});
+			});
+		</script>
+	</body>
+</html>
