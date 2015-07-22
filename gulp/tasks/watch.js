@@ -4,6 +4,9 @@ var buildConfig = require("../config");
 
 gulp.task("watch", function () {
 
-  gulp.watch(path.resolve(buildConfig.sourceRoot, "**/*.js"), ["webpack"]);
+  gulp.watch([
+    path.resolve(buildConfig.sourceRoot, "**/*.js"),
+    path.resolve(buildConfig.specRoot, "**/*.js")
+  ], ["test"]);
 
 });
