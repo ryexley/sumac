@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define(factory);
 	else if(typeof exports === 'object')
-		exports["cedar"] = factory();
+		exports["sumac"] = factory();
 	else
-		root["cedar"] = factory();
+		root["sumac"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -57,7 +57,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -78,155 +78,173 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Messenger = {
 
-		channel: null,
+	  channel: null,
 
-		_setupChannel: function _setupChannel(target) {
-			target.channel = _postal2["default"].channel(target.namespace || target.channelName);
-		},
+	  _setupChannel: function _setupChannel(target) {
+	    target.channel = _postal2["default"].channel(target.namespace || target.channelName);
+	  },
 
-		_ensureChannel: function _ensureChannel() {
-			if (!this.channel) {
-				this._setupChannel(this);
-			}
-		},
+	  _ensureChannel: function _ensureChannel() {
+	    if (!this.channel) {
+	      this._setupChannel(this);
+	    }
+	  },
 
-		publish: function publish(topic, data) {
-			this._ensureChannel();
-			return this.channel.publish.call(this.channel, {
-				topic: topic,
-				data: data || {}
-			});
-		},
+	  publish: function publish(topic, data) {
+	    this._ensureChannel();
+	    return this.channel.publish.call(this.channel, {
+	      topic: topic,
+	      data: data || {}
+	    });
+	  },
 
-		subscribe: function subscribe() {
-			this._ensureChannel();
-			var subscription = this.channel.subscribe.apply(this.channel, arguments);
+	  subscribe: function subscribe() {
+	    this._ensureChannel();
 
-			if (!this.messaging.subscriptions) {
-				this.messaging.subscriptions = {};
-			}
+	    var key = undefined,
+	        subscription = {};
 
-			this.messaging.subscriptions[subscription] = subscription;
+	    if (!(0, _lodash.isObject)(arguments[0])) {
+	      key = this.channelName + " " + arguments[0] || "";
+	      subscription = this.channel.subscribe.apply(this.channel, arguments);
+	    } else {
+	      var args = arguments[0];
+	      if (args.channel && args.topic) {
+	        key = args.channel + " " + args.topic;
+	        subscription = _postal2["default"].subscribe.apply(this, arguments).context(this);
+	      }
+	    }
 
-			return subscription.context(this);
-		},
+	    if (!this.messaging.subscriptions) {
+	      this.messaging.subscriptions = {};
+	    }
 
-		configureMessaging: function configureMessaging(options) {
-			options = options || {};
-			this.messaging = this.messaging || {};
-			this.setupSubscriptions();
-			this.setupMessages();
-			this.startWiretap(options.wiretap || {});
-		},
+	    this.messaging.subscriptions[key] = subscription;
 
-		clearMessages: function clearMessages() {
-			if (this.messaging.messages) {
-				(0, _lodash.each)(this.messaging.messages, function (message) {
-					(0, _lodash.each)(message, function (m) {
-						while (m.length) {
-							m.pop();
-						}
-					});
-				});
-			}
+	    return subscription.context(this);
+	  },
 
-			this.messaging.messages = {};
-		},
+	  configureMessaging: function configureMessaging(options) {
+	    options = options || {};
+	    this.messaging = this.messaging || {};
+	    this.setupSubscriptions();
+	    this.setupMessages();
+	    // this.startWiretap(options.wiretap || {});
+	  },
 
-		setupMessages: function setupMessages() {
-			var _this = this;
+	  clearMessages: function clearMessages() {
+	    if (this.messaging.messages) {
+	      (0, _lodash.each)(this.messaging.messages, function (message) {
+	        (0, _lodash.each)(message, function (m) {
+	          while (m.length) {
+	            m.pop();
+	          }
+	        });
+	      });
+	    }
 
-			this.clearMessages();
+	    this.messaging.messages = {};
+	  },
 
-			if (!(0, _lodash.isEmpty)(this.messages)) {
-				(0, _lodash.each)(this.messages, function (message, evnt) {
-					var _message = message;
+	  setupMessages: function setupMessages() {
+	    var _this = this;
 
-					if (!_this.messaging.messages[evnt]) {
-						_this.messaging.messages[evnt] = {};
-					}
+	    this.clearMessages();
 
-					(0, _lodash.each)(_message, function (accessor, m) {
-						var meta = m.split(" "),
-						    channel = meta[0],
-						    topic = meta[1],
-						    listener = function listener() {
-							var args = Array.prototype.slice.call(arguments, 0),
-							    data = accessor.apply(this, args);
+	    if (!(0, _lodash.isEmpty)(this.messages)) {
+	      (0, _lodash.each)(this.messages, function (message, evnt) {
+	        var _message = message;
 
-							_postal2["default"].publish({
-								channel: channel,
-								topic: topic,
-								data: data || {}
-							});
-						};
+	        if (!_this.messaging.messages[evnt]) {
+	          _this.messaging.messages[evnt] = {};
+	        }
 
-						_this.on(evnt, listener, _this);
-						_this.messaging.messages[evnt][m] = (0, _lodash.bind)(function () {
-							this.off(evnt, listener);
-						}, _this);
-					});
-				});
-			}
-		},
+	        if (!(0, _lodash.isObject)(message)) {
+	          _message = {};
+	          _message[message] = _lodash.identity;
+	        }
 
-		clearSubscriptions: function clearSubscriptions() {
-			if (this.messaging.subscriptions) {
-				(0, _lodash.each)(this.messaging.subscriptions, function (subscription) {
-					subscription.unsubscribe();
-				});
-			}
+	        (0, _lodash.each)(_message, function (accessor, m) {
+	          var meta = m.split(" "),
+	              channel = meta[0],
+	              topic = meta[1],
+	              listener = function listener() {
+	            var args = Array.prototype.slice.call(arguments, 0),
+	                data = accessor.apply(this, args);
 
-			this.messaging.subscriptions = {};
-		},
+	            _postal2["default"].publish({
+	              channel: channel,
+	              topic: topic,
+	              data: data || {}
+	            });
+	          };
 
-		setupSubscriptions: function setupSubscriptions() {
-			var _this2 = this;
+	          _this.on(evnt, listener, _this);
+	          _this.messaging.messages[evnt][m] = (0, _lodash.bind)(function () {
+	            this.off(evnt, listener);
+	          }, _this);
+	        });
+	      });
+	    }
+	  },
 
-			this.clearSubscriptions();
-			if (!(0, _lodash.isEmpty)(this.subscriptions)) {
-				(0, _lodash.each)(this.subscriptions, function (subscription, handler) {
-					subscription = (0, _lodash.isArray)(subscription) ? subscription : [subscription];
-					(0, _lodash.each)(subscription, function (s) {
-						var meta = s.split(" "),
-						    channel = meta[1] ? meta[0] : _this2.channelName,
-						    topic = meta[1] || meta[0];
+	  clearSubscriptions: function clearSubscriptions() {
+	    if (this.messaging.subscriptions) {
+	      (0, _lodash.each)(this.messaging.subscriptions, function (subscription) {
+	        subscription.unsubscribe();
+	      });
+	    }
 
-						if (_this2[handler]) {
-							_this2.messaging.subscriptions[subscription] = _postal2["default"].subscribe({
-								channel: channel,
-								topic: topic,
-								callback: _this2[handler]
-							}).context(_this2);
-						}
-					});
-				});
-			}
-		},
+	    this.messaging.subscriptions = {};
+	  },
 
-		startWiretap: function startWiretap(options) {
-			options = options || {};
+	  setupSubscriptions: function setupSubscriptions() {
+	    var _this2 = this;
 
-			if (options.enable && !!!_postal2["default"].wireTaps.length) {
-				this.wiretap = new _postalDiagnostics2["default"]({
-					name: "console",
-					active: options.active || true,
-					writer: function writer(output) {
-						console.log("%cPostal message:", "color: #390", JSON.parse(output));
-					}
-				});
-			}
-		},
+	    this.clearSubscriptions();
+	    if (!(0, _lodash.isEmpty)(this.subscriptions)) {
+	      (0, _lodash.each)(this.subscriptions, function (subscription, handler) {
+	        subscription = (0, _lodash.isArray)(subscription) ? subscription : [subscription];
+	        (0, _lodash.each)(subscription, function (s) {
+	          var meta = s.split(" "),
+	              channel = meta[1] ? meta[0] : _this2.channelName,
+	              topic = meta[1] || meta[0];
 
-		stopWiretap: function stopWiretap(options) {
-			options = options || {};
+	          if (_this2[handler]) {
+	            _this2.messaging.subscriptions[subscription] = _postal2["default"].subscribe({
+	              channel: channel,
+	              topic: topic,
+	              callback: _this2[handler]
+	            }).context(_this2);
+	          }
+	        });
+	      });
+	    }
+	  },
 
-			if (options.kill && options.kill === true) {
-				this.wiretap.removeWiretap();
-			} else {
-				this.wiretap.active = false;
-			}
-		}
+	  startWiretap: function startWiretap(options) {
+	    options = options || {};
+
+	    if (options.enable && !!!_postal2["default"].wireTaps.length) {
+	      this.wiretap = new _postalDiagnostics2["default"]({
+	        name: "console",
+	        active: options.active || true,
+	        writer: function writer(output) {
+	          console.log("%cPostal message:", "color: #390", JSON.parse(output));
+	        }
+	      });
+	    }
+	  },
+
+	  stopWiretap: function stopWiretap(options) {
+	    options = options || {};
+
+	    if (options.kill && options.kill === true) {
+	      this.wiretap.removeWiretap();
+	    } else {
+	      this.wiretap.active = false;
+	    }
+	  }
 
 	};
 

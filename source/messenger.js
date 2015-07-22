@@ -1,155 +1,181 @@
-import { assign as extend, each, isEmpty, isObject, isArray, identity, bind } from "lodash";
+import {
+  assign as extend,
+  each,
+  isEmpty,
+  isObject,
+  isArray,
+  identity,
+  bind
+}
+from "lodash";
 import postal from "postal";
 import DiagnosticsWireTap from "postal.diagnostics";
 import Events from "./events";
 
 const Messenger = {
 
-	channel: null,
+  channel: null,
 
-	_setupChannel (target) {
-		target.channel = postal.channel(target.namespace || target.channelName);
-	},
+  _setupChannel(target) {
+    target.channel = postal.channel(target.namespace || target.channelName);
+  },
 
-	_ensureChannel () {
-		if (!this.channel) {
-			this._setupChannel(this);
-		}
-	},
+  _ensureChannel() {
+    if (!this.channel) {
+      this._setupChannel(this);
+    }
+  },
 
-	publish (topic, data) {
-		this._ensureChannel();
-		return this.channel.publish.call(this.channel, {
-			topic: topic,
-			data: data || {}
-		});
-	},
+  publish(topic, data) {
+    this._ensureChannel();
+    return this.channel.publish.call(this.channel, {
+      topic: topic,
+      data: data || {}
+    });
+  },
 
-	subscribe () {
-		this._ensureChannel();
-		let subscription = this.channel.subscribe.apply(this.channel, arguments);
+  subscribe() {
+    this._ensureChannel();
 
-		if (!this.messaging.subscriptions) {
-			this.messaging.subscriptions = {};
-		}
+    let key, subscription = {};
 
-		this.messaging.subscriptions[subscription] = subscription;
+    if (!isObject(arguments[0])) {
+      key = this.channelName + " " + arguments[0] || "";
+      subscription = this.channel.subscribe.apply(this.channel, arguments);
+    } else {
+      let args = arguments[0];
+      if (args.channel && args.topic) {
+        key = args.channel + " " + args.topic;
+        subscription = postal.subscribe.apply(this, arguments).context(this);
+      }
+    }
 
-		return subscription.context(this);
-	},
+    if (!this.messaging.subscriptions) {
+      this.messaging.subscriptions = {};
+    }
 
-	configureMessaging (options) {
-		options = options || {};
-		this.messaging = this.messaging || {};
-		this.setupSubscriptions();
-		this.setupMessages();
-		this.startWiretap(options.wiretap || {});
-	},
+    this.messaging.subscriptions[key] = subscription;
 
-	clearMessages () {
-		if (this.messaging.messages) {
-			each(this.messaging.messages, (message) => {
-				each(message, (m) => {
-					while (m.length) {
-						m.pop();
-					}
-				});
-			});
-		}
+    return subscription.context(this);
+  },
 
-		this.messaging.messages = {};
-	},
+  configureMessaging(options) {
+    options = options || {};
+    this.messaging = this.messaging || {};
+    this.setupSubscriptions();
+    this.setupMessages();
+    // this.startWiretap(options.wiretap || {});
+  },
 
-	setupMessages () {
-		this.clearMessages();
+  clearMessages() {
+    if (this.messaging.messages) {
+      each(this.messaging.messages, (message) => {
+        each(message, (m) => {
+          while (m.length) {
+            m.pop();
+          }
+        });
+      });
+    }
 
-		if (!isEmpty(this.messages)) {
-			each(this.messages, (message, evnt) => {
-				let _message = message;
+    this.messaging.messages = {};
+  },
 
-				if (!this.messaging.messages[evnt]) {
-					this.messaging.messages[evnt] = {};
-				}
+  setupMessages() {
+    this.clearMessages();
 
-				each(_message, (accessor, m) => {
-					let meta = m.split(" "),
-							channel = meta[0],
-							topic = meta[1],
-							listener = function () {
-								let args = Array.prototype.slice.call(arguments, 0),
-										data = accessor.apply(this, args);
+    if (!isEmpty(this.messages)) {
+      each(this.messages, (message, evnt) => {
+        let _message = message;
 
-								postal.publish({
-									channel: channel,
-									topic: topic,
-									data: data || {}
-								});
-							};
+        if (!this.messaging.messages[evnt]) {
+          this.messaging.messages[evnt] = {};
+        }
 
-					this.on(evnt, listener, this);
-					this.messaging.messages[evnt][m] = bind(function () {
-						this.off(evnt, listener);
-					}, this);
-				});
-			});
-		}
-	},
+        if (!isObject(message)) {
+          _message = {};
+          _message[message] = identity;
+        }
 
-	clearSubscriptions () {
-		if (this.messaging.subscriptions) {
-			each(this.messaging.subscriptions, (subscription) => {
-				subscription.unsubscribe();
-			});
-		}
+        each(_message, (accessor, m) => {
+          let meta = m.split(" "),
+              channel = meta[0],
+              topic = meta[1],
+              listener = function() {
+                let args = Array.prototype.slice.call(arguments, 0),
+                    data = accessor.apply(this, args);
 
-		this.messaging.subscriptions = {};
-	},
+                postal.publish({
+                  channel: channel,
+                  topic: topic,
+                  data: data || {}
+                });
+              };
 
-	setupSubscriptions () {
-		this.clearSubscriptions();
-		if (!isEmpty(this.subscriptions)) {
-			each(this.subscriptions, (subscription, handler) => {
-				subscription = isArray(subscription) ? subscription : [subscription];
-				each(subscription, (s) => {
-					let meta = s.split(" "),
-							channel = meta[1] ? meta[0] : this.channelName,
-							topic = meta[1] || meta[0];
+          this.on(evnt, listener, this);
+          this.messaging.messages[evnt][m] = bind(function() {
+            this.off(evnt, listener);
+          }, this);
+        });
+      });
+    }
+  },
 
-					if (this[handler]) {
-						this.messaging.subscriptions[subscription] = postal.subscribe({
-							channel: channel,
-							topic: topic,
-							callback: this[handler]
-						}).context(this);
-					}
-				});
-			});
-		}
-	},
+  clearSubscriptions() {
+    if (this.messaging.subscriptions) {
+      each(this.messaging.subscriptions, (subscription) => {
+        subscription.unsubscribe();
+      });
+    }
 
-	startWiretap (options) {
-		options = options || {};
+    this.messaging.subscriptions = {};
+  },
 
-		if (options.enable && !!!postal.wireTaps.length) {
-			this.wiretap = new DiagnosticsWireTap({
-				name: "console",
-				active: options.active || true,
-				writer: function (output) {
-					console.log("%cPostal message:", "color: #390", JSON.parse(output));
-				}
-			});
-		}
-	},
+  setupSubscriptions() {
+    this.clearSubscriptions();
+    if (!isEmpty(this.subscriptions)) {
+      each(this.subscriptions, (subscription, handler) => {
+        subscription = isArray(subscription) ? subscription : [subscription];
+        each(subscription, (s) => {
+          let meta = s.split(" "),
+              channel = meta[1] ? meta[0] : this.channelName,
+              topic = meta[1] || meta[0];
 
-	stopWiretap (options) {
-		options = options || {};
+          if (this[handler]) {
+            this.messaging.subscriptions[subscription] = postal.subscribe({
+              channel: channel,
+              topic: topic,
+              callback: this[handler]
+            }).context(this);
+          }
+        });
+      });
+    }
+  },
 
-		if (options.kill && options.kill === true) {
-			this.wiretap.removeWiretap();
-		} else {
-			this.wiretap.active = false;
-		}
-	}
+  startWiretap(options) {
+    options = options || {};
+
+    if (options.enable && !!!postal.wireTaps.length) {
+      this.wiretap = new DiagnosticsWireTap({
+        name: "console",
+        active: options.active || true,
+        writer: function(output) {
+          console.log("%cPostal message:", "color: #390", JSON.parse(output));
+        }
+      });
+    }
+  },
+
+  stopWiretap(options) {
+    options = options || {};
+
+    if (options.kill && options.kill === true) {
+      this.wiretap.removeWiretap();
+    } else {
+      this.wiretap.active = false;
+    }
+  }
 
 };
 

@@ -12,7 +12,7 @@ var config = {
     path: buildConfig.buildRoot,
     filename: "[name].js",
     libraryTarget: "umd",
-    library: "cedar"
+    library: "sumac"
   },
   plugins: [],
   resolve: ["", ".js"],
