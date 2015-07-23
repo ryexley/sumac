@@ -41,7 +41,7 @@ const Messenger = {
 
     if (!isObject(arguments[0])) {
       key = this.channelName + " " + arguments[0] || "";
-      subscription = this.channel.subscribe.apply(this.channel, arguments);
+      subscription = this.channel.subscribe.apply(this.channel, arguments).context(this);
     } else {
       let args = arguments[0];
       if (args.channel && args.topic) {

@@ -106,7 +106,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    if (!(0, _lodash.isObject)(arguments[0])) {
 	      key = this.channelName + " " + arguments[0] || "";
-	      subscription = this.channel.subscribe.apply(this.channel, arguments);
+	      subscription = this.channel.subscribe.apply(this.channel, arguments).context(this);
 	    } else {
 	      var args = arguments[0];
 	      if (args.channel && args.topic) {

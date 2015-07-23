@@ -21,7 +21,9 @@ describe("Messenger", function () {
 		messagesSent: [],
 		messagesReceived: [],
 
-		messages: {},
+		messages: {
+			orderReady: "Kitchen order.ready"
+		},
 
 		subscriptions: {
 			"handleOrderPlaced": "DiningRoom order.placed"
@@ -145,6 +147,17 @@ describe("Messenger", function () {
 			expect(_waitress.messaging.messages.orderReady).to.exist;
 		});
 
+		it("should be able to publish configured messages", function (done) {
+			_chef.handleOrderPlaced = function (data, env) {
+				// if we got in here, then the waitress successfully published a configured message
+				done();
+			};
+
+			_chef.configureMessaging();
+
+			_waitress.submitOrder({ order: "Chocolate shake" });
+		});
+
 	});
 
 	describe("subscriptions", function () {
@@ -157,13 +170,24 @@ describe("Messenger", function () {
 
 		it("should handle message subscriptions", function (done) {
 			_chef.handleOrderPlaced = function (data, env) {
-				expect(data.order).to.equal("Cheeseburger, fries and a Coke");
+				expect(env.channel).to.equal("DiningRoom");
+				expect(env.topic).to.equal("order.placed");
+				expect(data).to.be.an("object");
 				done();
 			};
 
 			_chef.configureMessaging();
 
 			_waitress.submitOrder({ order: "Cheeseburger, fries and a Coke" });
+		});
+
+		it("should handle messages manually subscribed to on its own channel", function (done) {
+			_chef.subscribe("order.ready", function (data, env) {
+				// if we got in here, then the message published was successfully subscribed to
+				done();
+			});
+
+			_chef.trigger("orderReady", { orderId: 1234 });
 		});
 
 	});
