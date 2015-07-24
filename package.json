@@ -1,6 +1,12 @@
 {
   "name": "Cedar",
+  "description": "A mixin for adding postal.js messaging functionality to your modules",
   "version": "0.2.0",
+  "author": {
+    "name": "Bob Yexley"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ryexley/sumac",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha spec/messenger.spec.js"
   },

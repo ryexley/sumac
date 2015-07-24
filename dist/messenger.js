@@ -1,3 +1,9 @@
+// Cedar, v0.2.0 | (c) 2015 Bob Yexley
+// Description: A mixin for adding postal.js messaging functionality to your modules
+// Built: July 23, 2015 22:14:47.192
+// Homepage: https://github.com/ryexley/sumac
+// License: MIT (http://www.opensource.org/licenses/mit-license)
+
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
