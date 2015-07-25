@@ -11,7 +11,7 @@
     "build": "gulp build",
     "test": "./node_modules/mocha/bin/mocha spec/messenger.spec.js",
     "preversion": "npm test",
-    "version": "npm run build && git commit -m 'Version %s'",
+    "version": "npm run build",
     "postversion": "git push && git push --tags && npm publish"
   },
   "devDependencies": {
