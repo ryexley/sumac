@@ -1,6 +1,6 @@
-// Cedar, v0.2.1 | (c) 2015 Bob Yexley
+// Sumac, v0.2.2 | (c) 2015 Bob Yexley
 // Description: A mixin for adding postal.js messaging functionality to your modules
-// Built: July 24, 2015 21:32:56.976
+// Built: July 24, 2015 21:41:25.529
 // Homepage: https://github.com/ryexley/sumac
 // License: MIT (http://www.opensource.org/licenses/mit-license)
 

@@ -1,5 +1,5 @@
 {
-  "name": "Sumac",
+  "name": "sumac",
   "description": "A mixin for adding postal.js messaging functionality to your modules",
   "version": "0.2.2",
   "author": {
