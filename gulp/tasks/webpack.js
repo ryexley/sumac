@@ -2,6 +2,7 @@ var path = require("path");
 var gulp = require("gulp");
 var gulpUtil = require("gulp-util");
 var webpack = require("webpack");
+var _merge = require("lodash/object/merge");
 var buildConfig = require("../config");
 
 var config = {
@@ -23,7 +24,19 @@ var config = {
   }
 };
 
-gulp.task("webpack", ["clean:dist"], function (next) {
+var minConfig = _merge({}, config, {
+  output: {
+    filename: "[name].min.js",
+    sourceMailFilename: "[name].min.js.map"
+  },
+  plugins: [
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.UglifyJsPlugin({ compress: { warnings: false }})
+  ],
+  devtool: "#source-map"
+});
+
+var build = function (config, next) {
   webpack(config, function (err, stats) {
     if (err) {
       throw new gulpUtil.PluginError("webpack", err);
@@ -42,4 +55,12 @@ gulp.task("webpack", ["clean:dist"], function (next) {
 
     next();
   });
+};
+
+gulp.task("webpack", ["clean:dist"], function (next) {
+  build(config, next);
+});
+
+gulp.task("webpack:min", ["clean:dist:min"], function (next) {
+  build(minConfig, next);
 });
