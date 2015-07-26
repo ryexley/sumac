@@ -11,9 +11,9 @@
     "build": "gulp build",
     "test": "./node_modules/mocha/bin/mocha spec/messenger.spec.js",
     "preversion": "npm test",
-    "version": "npm run build",
+    "version": "npm run build && git add -A dist/",
     "postversion": "git push && git push --tags && npm publish",
-    "release": "npm version patch -m 'v%s' --force"
+    "release": "npm version patch -m 'v%s'"
   },
   "devDependencies": {
     "babel-core": "^5.7.4",
