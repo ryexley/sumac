@@ -1,7 +1,7 @@
 {
   "name": "sumac",
   "description": "A mixin for adding postal.js messaging functionality to your modules",
-  "version": "0.2.8",
+  "version": "0.2.0",
   "author": {
     "name": "Bob Yexley"
   },
@@ -12,7 +12,8 @@
     "test": "./node_modules/mocha/bin/mocha spec/messenger.spec.js",
     "preversion": "npm test",
     "version": "npm run build",
-    "postversion": "git push && git push --tags && npm publish"
+    "postversion": "git push && git push --tags && npm publish",
+    "release": "npm version patch -m 'v%s' --force"
   },
   "devDependencies": {
     "babel-core": "^5.7.4",
