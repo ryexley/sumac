@@ -1,6 +1,6 @@
-// sumac, v0.2.3 | (c) 2015 Bob Yexley
+// sumac, v0.3.0 | (c) 2015 Bob Yexley
 // Description: A mixin for adding postal.js messaging functionality to your modules
-// Built: July 26, 2015 10:36:11.600
+// Built: July 26, 2015 10:37:46.459
 // Homepage: https://github.com/ryexley/sumac
 // License: MIT (http://www.opensource.org/licenses/mit-license)
 
