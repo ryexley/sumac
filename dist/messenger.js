@@ -1,9 +1,3 @@
-// sumac, v0.3.0 | (c) 2015 Bob Yexley
-// Description: A mixin for adding postal.js messaging functionality to your modules
-// Built: July 26, 2015 10:37:46.459
-// Homepage: https://github.com/ryexley/sumac
-// License: MIT (http://www.opensource.org/licenses/mit-license)
-
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -135,7 +129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.messaging = this.messaging || {};
 	    this.setupSubscriptions();
 	    this.setupMessages();
-	    // this.startWiretap(options.wiretap || {});
+	    this.startWiretap(options.wiretap || {});
 	  },
 
 	  clearMessages: function clearMessages() {

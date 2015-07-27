@@ -64,7 +64,7 @@ const Messenger = {
     this.messaging = this.messaging || {};
     this.setupSubscriptions();
     this.setupMessages();
-    // this.startWiretap(options.wiretap || {});
+    this.startWiretap(options.wiretap || {});
   },
 
   clearMessages() {
